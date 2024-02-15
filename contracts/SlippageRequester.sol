@@ -22,7 +22,7 @@ contract SlipageRequester {
      * @param sender_ a valid EOA's address
      * @param dataFeedA_ the address of the Chainlink data feed for token A
      * @param dataFeedB_ the address of the Chainlink data feed for token B
-     * @return USD equivalent
+     * @return tuple (tokenA in USD, tokenB in USD, slippage in USD)
      */
     function getSlippage(
         bytes32 poolId_,
@@ -36,11 +36,12 @@ contract SlipageRequester {
     )
         external
         returns (
-            int256,
-            int256,
+            uint256,
+            uint256,
             int256
         )
     {
+        // 1. Get the estimation from the swap dry run
         uint256 returnValue = _getSwapValue(
             poolId_,
             kind_,
@@ -50,41 +51,56 @@ contract SlipageRequester {
             sender_
         );
 
-        // Get the token prices
+        // 2. Get the token prices
         int256 tokenAPrice = _getChainlinkPrice(dataFeedA_);
         int256 tokenBPrice = _getChainlinkPrice(dataFeedB_);
 
-        // Calculate the expected and observed values in USD
+        // 3. Calculate the expected and observed values in USD
         uint256 expected = (amount_ * uint256(tokenAPrice)) /
             (10**AggregatorV3Interface(dataFeedA_).decimals());
         uint256 actual = (returnValue * uint256(tokenBPrice)) /
             (10**AggregatorV3Interface(dataFeedB_).decimals());
 
-        // Return the slippage
-        return (tokenAPrice, tokenBPrice, int256(actual) - int256(expected));
+        // 4. Return the values
+        return (
+            uint256(tokenAPrice) * amount_,     // Token A in USD
+            uint256(tokenBPrice) * returnValue, // Token B in USD
+            int256(actual) - int256(expected)   // Slippage in USD
+        );
     }
 
+    /**
+    * @dev Utility returning the token selector for `getSlippage`
+    */
     function calculateFunctionSelector() external pure returns (bytes4) {
         return this.getSlippage.selector;
     }
 
+    /**
+    * @dev Retrievs the token price from the ChainLink Oracle
+    * @param dataFeed_ the address of the token price feed
+    * @return the current token price in USD
+    */
     function _getChainlinkPrice(address dataFeed_)
         private
         view
         returns (int256)
     {
         (
-            ,
-            /* uint80 roundID */
-            int256 answer, /*uint startedAt*/ /*uint timeStamp*/ /*uint80 answeredInRound*/
-            ,
-            ,
+            /* uint80 roundID */,
+            int answer,
+            /*uint startedAt*/,
+            /*uint timeStamp*/,
+            /*uint80 answeredInRound*/
 
         ) = AggregatorV3Interface(dataFeed_).latestRoundData();
 
         return answer;
     }
 
+    /**
+    * @dev Populates the SingleSwap struct
+    */
     function _populateSingleSwap(
         bytes32 poolId_,
         IVault.SwapKind kind_,
@@ -103,6 +119,10 @@ contract SlipageRequester {
             });
     }
 
+    /**
+    * @dev Populates the FundManagement struct
+    * @param sender_ a valid EVM EOA
+    */
     function _populateFundManagement(address sender_)
         private
         pure
@@ -117,6 +137,16 @@ contract SlipageRequester {
             });
     }
 
+    /**
+    * @dev Querries the Balancer contract
+    * @param poolId_ the unique identifier of the requested token pool
+    * @param kind_ ∈ {GIVEN_IN, GIVEN_OUT}
+    * @param tokenA_ the address of the firs token in the pair
+    * @param tokenB_ the address of the second token
+    * @param amount_ the sum x token decimals
+    * @param sender_ a valid EOA's address
+    * @return the value of token B swapped for token A
+    */
     function _getSwapValue(
         bytes32 poolId_,
         IVault.SwapKind kind_,
@@ -125,24 +155,26 @@ contract SlipageRequester {
         uint256 amount_,
         address sender_
     ) private returns (uint256) {
-        // Call querySwap with params
+        // 1. Call querySwap with params
         bytes memory callData = abi.encodeWithSignature(
             "querySwap((bytes32, uint8, address, address, uint256, bytes),(address, bool, address, bool))",
             _populateSingleSwap(poolId_, kind_, tokenA_, tokenB_, amount_),
             _populateFundManagement(sender_)
         );
 
+        // 2. Call the Balancer contract
         (bool success, bytes memory data) = balancerAddress.call(callData);
 
-        // Check success or revert
+        // 3. Check success or revert
         require(success, "Call failed");
 
-        // Convert the return value to uint256
+        // 4. Convert the return value to uint256
         uint256 returnValue;
         assembly {
             returnValue := mload(add(data, 32))
         }
 
+        // 5. Return the value of token B
         return returnValue;
     }
 }
