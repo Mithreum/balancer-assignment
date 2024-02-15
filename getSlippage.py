@@ -48,7 +48,7 @@ sender              = "0x738b2B2153d78Fc8E690b160a6fC919B2C88b6A4"  # Or replace
 data_feed_a         = "0xabc..."  # Replace with the actual address of Chainlink data feed for token A
 data_feed_b         = "0xdef..."  # Replace with the actual address of Chainlink data feed for token B
 
-
+# 2. Prepare the data
 request_data = encode_data(contract_address, function_signature, pool_id, kind, token_a, token_b, amount, sender, data_feed_a, data_feed_b)
 
 # 3. Execute the request
@@ -60,5 +60,5 @@ result = json.loads(response.text)['result']
 # 5. Convert hex result to integer
 result_int = int(result, 16)
 
-# Output the result
+# 6. Output the result
 print("The slippage is:", result_int)
