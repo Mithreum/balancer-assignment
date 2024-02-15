@@ -36,7 +36,7 @@ def get_abi():
 
 
 # 1. Populate the request variables:
-ethereum_node_url   = "https://ethereum.publicnode.com" # https://chainlist.org/
+ethereum_node_url   = "https://rpc.vnet.tenderly.co/devnet/my-first-devnet/eaf20206-5ec4-4835-a21c-82541136d115" # https://chainlist.org/
 contract_address    = "0x123456..." # Replace with the actual contract address
 function_signature  = "0x3087bfd8"  # Function signature
 pool_id             = "0x01.."  # Replace with the actual bytes32 value of the pool ID
@@ -58,7 +58,7 @@ response = requests.post(ethereum_node_url, json=request_data)
 result = json.loads(response.text)['result']
 
 # 5. Convert hex result to integer
-result_int = int(result, 16)
+tup_result = int(result[0], 16), int(result[1], 16), int(result[2], 16)
 
-# 6. Output the result
-print("The slippage is:", result_int)
+# 6. Output the result (NB. divide each token by 10 ** decimals)
+print("Price of A", tup_result[0], "Price of B", tup_result[1], "Slippage:", tup_result[2])
