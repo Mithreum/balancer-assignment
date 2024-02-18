@@ -28,29 +28,34 @@ def encode_data(contract_address, function_signature, pool_id, kind, token_a, to
 def get_slippage(url, data) -> tuple:
     '''Querries the contract & parses its output'''
 
-    # 1. Execute the request
-    response = requests.post(url, json=data)
+    try:
 
-    # 2. Parse the response
-    result_hex = json.loads(response.text)['result']
+        # 1. Execute the request
+        response = requests.post(url, json=data)
 
-    # 3. Parse the hexadecimal string into respective components
-    token_a_price = int(result_hex[2:66], 16)
-    token_b_price = int(result_hex[66:130], 16)
-    # contract_slippage = int(result_hex[130:194], 16) # Ignore
-    token_a_price_decimals = int(result_hex[194:258], 16)
-    token_b_price_decimals = int(result_hex[258:], 16)
+        # 2. Parse the response
+        result_hex = json.loads(response.text)['result']
 
-    token_a_decimals = 6
-    token_b_decimals = 18
+        # 3. Parse the hexadecimal string into respective components
+        token_a_price = int(result_hex[2:66], 16)
+        token_b_price = int(result_hex[66:130], 16)
+        # contract_slippage = int(result_hex[130:194], 16) # Ignore
+        token_a_price_decimals = int(result_hex[194:258], 16)
+        token_b_price_decimals = int(result_hex[258:], 16)
 
-    expected = token_a_price / 10 ** (token_a_price_decimals + token_a_decimals)
-    actual = token_b_price / 10 ** (token_b_price_decimals + token_b_decimals)
-    slippage = expected - actual
-    slip_percent = slippage / expected * 100
+        token_a_decimals = 6
+        token_b_decimals = 18
 
-    return expected, actual, slippage, slip_percent
+        expected = token_a_price / 10 ** (token_a_price_decimals + token_a_decimals)
+        actual = token_b_price / 10 ** (token_b_price_decimals + token_b_decimals)
+        slippage = expected - actual
+        slip_percent = slippage / expected * 100
 
+        return expected, actual, slippage, slip_percent
+
+    except:
+        print('Check the RPC URL, pool_id, contract or feed addresses')
+        return 'error', 'error', 'error', 'error'
 
 # TESTS:
 
