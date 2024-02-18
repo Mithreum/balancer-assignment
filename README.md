@@ -32,5 +32,9 @@ python3 getSlippage.py
 Response example: for USDC / WMATIC, amount 1_000_000_000
 
 ```bash
-Expected: 999.98852 Actual: 992.908612139037 Slippage: 7.079907860962976
+USDC / WMATIC
+ Expected($):    1000.02998 
+ Actual  ($):    993.344667370729 
+ Slippage($):    6.6853126292710385 
+ Slippage(%):    0.67%
 ```
