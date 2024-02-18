@@ -54,24 +54,49 @@ def get_slippage(url, data) -> tuple:
 
 # TESTS:
 
-# 1. Populate the request variables:
-ethereum_node_url   = "https://polygon.drpc.org" # https://chainlist.org/
-contract_address    = "0x0A6A1Beb7b0b3545578818f45f4e6219615d25aD" # Polygon, Replace with the actual contract address on other chains
-function_signature  = "0x3087bfd8"  # Function signature
-pool_id             = "0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002"  # Replace with the actual bytes32 value of the pool ID
-kind                = "0x00"  # Assuming GIVEN_IN is represented by 0 & GIVEN_OUT by 1 (0x01)
-token_a             = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"  # USDC.e or Replace with the actual address of tokenA
-token_b             = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"  # WMATIC or Replace with the actual address of tokenB
-amount              = 1_000_000_000
-sender              = "0x8cE9Edd9FeE8bEbbF33d059602Fbd487fdEB3661"  # any valid EVM address
-data_feed_a         = "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7"  # USDC/USD Replace with the actual address of Chainlink data feed for token A
-data_feed_b         = "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0"  # MATIC/USD Replace with the actual address of Chainlink data feed for token B
+tests = [
+    {
+        'pair': 'USDC / WMATIC',
+        'rpc_url':'https://polygon.drpc.org', # Polygon
+        'contract': '0x0A6A1Beb7b0b3545578818f45f4e6219615d25aD', # Polygon
+        'function': '0x3087bfd8', # Function signature
+        'pool_id': '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002',
+        'kind': '0x00',
+        'token_a':'0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', # USDC.e or Replace with the actual address of tokenA
+        'token_b': '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',# WMATIC or Replace with the actual address of tokenB 
+        'amount': 1_000_000_000,
+        'sender': '0x8cE9Edd9FeE8bEbbF33d059602Fbd487fdEB3661', # any valid EVM address
+        'feed_a': '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7', # USDC/USD Replace with the actual address of Chainlink data feed for token A
+        'feed_b': '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0' # MATIC/USD Replace with the actual address of Chainlink data feed for token B
+    },
+    {
+        'pair': 'USDC / WETH',
+        'rpc_url':'https://polygon.drpc.org', # Polygon
+        'contract': '0x0A6A1Beb7b0b3545578818f45f4e6219615d25aD', # Polygon
+        'function': '0x3087bfd8', # Function signature
+        'pool_id': '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002',
+        'kind': '0x00',
+        'token_a':'0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', # USDC
+        'token_b': '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', # WETH
+        'amount': 1_000_000_000,
+        'sender': '0x8cE9Edd9FeE8bEbbF33d059602Fbd487fdEB3661', # any valid EVM address
+        'feed_a': '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7', # USDC/USD Replace with the actual address of Chainlink data feed for token A
+        'feed_b': '0xF9680D99D6C9589e2a93a78A04A279e509205945' # WETH
+    },
+]
 
-# 2. Prepare the data
-request_data = encode_data(contract_address, function_signature, pool_id, kind, token_a, token_b, amount, sender, data_feed_a, data_feed_b)
+def main():
 
-# 3. 
-[expected, actual, slippage, slip_percent] = get_slippage(ethereum_node_url, request_data)
+    for test in tests:
 
-# 4. Output the result (NB. divide each token by 10 ** decimals)
-print("USDC / WMATIC\n Expected($):\t", expected, '\n', "Actual  ($):\t", actual, '\n', "Slippage($):\t", slippage, '\n', f"Slippage(%): \t{" {:.2f}%".format(slip_percent)}")
+        # 1. Prepare the data
+        request_data = encode_data(test['contract'], test['function'], test['pool_id'], test['kind'], test['token_a'], test['token_b'], test['amount'], test['sender'], test['feed_a'], test['feed_b'])
+
+        # 2. 
+        [expected, actual, slippage, slip_percent] = get_slippage(test['rpc_url'], request_data)
+
+        # 3. Output the result (NB. divide each token by 10 ** decimals)
+        print(f"{test['pair']}\n Expected($):\t", expected, '\n', "Actual  ($):\t", actual, '\n', "Slippage($):\t", slippage, '\n', f"Slippage(%): \t{" {:.2f}%".format(slip_percent)}")
+
+
+main()
