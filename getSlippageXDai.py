@@ -1,12 +1,14 @@
 from utils import main
 
+# https://docs.balancer.fi/reference/contracts/deployment-addresses/gnosis.html
+
 #TESTS
 
 tests = [
     {
         'pair': 'WETH / USDC',
         'rpc_url':'https://gnosis.drpc.org', # xDai
-        'contract': '0x6b30f76CecE9F92D27f0e9Ad78312E77709E74A5', # Polygon
+        'contract': '0x6b30f76CecE9F92D27f0e9Ad78312E77709E74A5', # xDai
         'function': '0x3087bfd8', # Function signature
         'pool_id': '0x4d7adc5e362a97b5ba1b02bc0447249ac81e76ad00010000000000000000003e',
         'kind': '0x00',
