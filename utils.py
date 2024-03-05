@@ -23,6 +23,17 @@ def encode_data(contract_address, function_signature, pool_id, kind, token_a, to
         "id": 1
     }
 
+def parse_signed_number(hex_string: str, num_bytes: int) -> int:
+    # Convert hexadecimal string to an integer
+    value = int(hex_string, 16)
+    
+    # Check if the most significant bit is set (indicating a negative number)
+    if value & (1 << (num_bytes * 8 - 1)):
+        # Convert the value to a negative number using two's complement
+        value -= 1 << (num_bytes * 8)
+
+    return value
+
 
 def get_slippage(url, data, token_a_decimals, token_b_decimals) -> tuple:
     '''Querries the contract & parses its output'''
@@ -38,20 +49,21 @@ def get_slippage(url, data, token_a_decimals, token_b_decimals) -> tuple:
         print('result_hex', result_hex)
 
         # 3. Parse the hexadecimal string into respective components
-        token_a_price = int(result_hex[2:66], 16)
-        token_b_price = int(result_hex[66:130], 16)
-        # contract_slippage = int(result_hex[130:194], 16) # Ignore
-        token_a_price_decimals = int(result_hex[194:258], 16)
-        token_b_price_decimals = int(result_hex[258:], 16)
+        step = 64 # 32 bytes * 2 chars representation
+        start = 2 # 0x prefix
+        stop = start + step
+        slippage_percent = parse_signed_number(result_hex[start:stop], 32)
+        start = stop
+        stop += step
+        contract_slippage = parse_signed_number(result_hex[start:stop], 32)
+        start = stop
+        stop += step
+        token_a_price = int(result_hex[start:stop], 16)
+        start = stop
+        stop += step
+        token_b_price = int(result_hex[start:stop], 16)
 
-        print('token_a_price', token_a_price, 'token_b_price', token_b_price, token_a_price_decimals, token_b_price_decimals)
-
-        expected = token_a_price / 10 ** (token_a_price_decimals + token_a_decimals)
-        actual = token_b_price / 10 ** (token_b_price_decimals + token_b_decimals)
-        slippage = expected - actual
-        slip_percent = slippage / expected * 100
-
-        return expected, actual, slippage, slip_percent
+        return slippage_percent / 10 ** (6), contract_slippage / 10 ** (6), token_a_price / 10 ** (token_a_decimals + 8), token_b_price / 10 ** (token_b_decimals + 8)
 
     except:
         print('Check the RPC URL, pool_id, contract or feed addresses')
@@ -66,11 +78,13 @@ def main(tests):
             # 1. Prepare the data
             request_data = encode_data(test['contract'], test['function'], test['pool_id'], test['kind'], test['token_a'], test['token_b'], test['amount'], test['sender'], test['feed_a'], test['feed_b'])
 
+            print('request_data', request_data)
+
             # 2. 
-            [expected, actual, slippage, slip_percent] = get_slippage(test['rpc_url'], request_data, test['a_decimals'], test['b_decimals'])
+            [slippage_percent, contract_slippage, token_a_price, token_b_price] = get_slippage(test['rpc_url'], request_data, test['a_decimals'], test['b_decimals'])
 
             # 3. Output the result (NB. divide each token by 10 ** decimals)
-            print(f"{test['pair']}\n Expected($):\t", expected, '\n', "Actual  ($):\t", actual, '\n', "Slippage($):\t", slippage, '\n', f"Slippage(%): \t{" {:.2f}%".format(slip_percent)}")
+            print(f"{test['pair']}\n Slippage %:\t", slippage_percent, '\n', "Slippage (V):\t", contract_slippage, '\n', "Price A($):\t", token_a_price, '\n', "Price B($): \t", token_b_price)
 
         except Exception as e:
             print('An error occured', e)

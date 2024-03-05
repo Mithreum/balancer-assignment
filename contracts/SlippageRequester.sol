@@ -3,6 +3,7 @@ pragma solidity >=0.7.0;
 
 import { IVault } from "./interfaces/IVault.sol";
 import { IAsset } from "./interfaces/IAsset.sol";
+import { IERC20Metadata } from "./interfaces/IERC20Metadata.sol";
 import { AggregatorV3Interface } from "./interfaces/AggregatorV3Interface.sol";
 
 contract SlipageRequester {
@@ -58,7 +59,7 @@ contract SlipageRequester {
      * @param sender_ a valid EOA's address
      * @param dataFeedA_ the address of the Chainlink data feed for token A
      * @param dataFeedB_ the address of the Chainlink data feed for token B
-     * @return tuple (tokenA in USD, tokenB in USD, slippage in USD, decimalsA, decimalsB)
+     * Returns: tuple (int256 Slippage, uint256 TokenAPrice, uint256 TokenBPrice)
      */
     function getSlippage(
         bytes32 poolId_,
@@ -72,11 +73,10 @@ contract SlipageRequester {
     )
         external
         returns (
-            uint256,
-            uint256,
-            int256,
-            uint8,
-            uint8
+            int256 SlipagePercent,
+            int256 SlippageAmount,
+            int256 TokenAPrice,
+            int256 TokenBPrice
         )
     {
         // 1. Get the estimation from the swap dry run
@@ -90,23 +90,25 @@ contract SlipageRequester {
         );
 
         // 2. Get the token prices
-        int256 tokenAPrice = _getChainlinkPrice(dataFeedA_);
-        int256 tokenBPrice = _getChainlinkPrice(dataFeedB_);
+        TokenAPrice = int256(amount_) * _getChainlinkPrice(dataFeedA_);
+        TokenBPrice = int256(returnValue) * _getChainlinkPrice(dataFeedB_);
+
+        // 3. Extract the token decimals from their contracts:
+        uint8 tokenADecimals = IERC20Metadata(tokenA_).decimals();
+        uint8 tokenBDecimals = IERC20Metadata(tokenB_).decimals();
 
         // 3. Calculate the expected and observed values in USD
-        uint256 expected = (amount_ * uint256(tokenAPrice)) /
-            (10**AggregatorV3Interface(dataFeedA_).decimals());
-        uint256 actual = (returnValue * uint256(tokenBPrice)) /
-            (10**AggregatorV3Interface(dataFeedB_).decimals());
+        int256 expected = (TokenAPrice * 1000000) /
+            int256(10**(AggregatorV3Interface(dataFeedA_).decimals() + tokenADecimals));
 
-        // 4. Return the values
-        return (
-            uint256(tokenAPrice) * amount_, // Token A in USD
-            uint256(tokenBPrice) * returnValue, // Token B in USD
-            int256(actual) - int256(expected), // Slippage in USD
-            AggregatorV3Interface(dataFeedA_).decimals(),
-            AggregatorV3Interface(dataFeedB_).decimals()
-        );
+        int256 actual = (TokenBPrice * 1000000) /
+            int256(10**(AggregatorV3Interface(dataFeedB_).decimals()+ tokenBDecimals));
+
+        // Slippage with 1e6 decimals
+        SlippageAmount = int256(actual) - int256(expected);
+        // Slippage % multiplied by 100% & 1e6 decimals
+        SlipagePercent = SlippageAmount * 100000000 / expected;
+
     }
 
     /**
@@ -117,7 +119,7 @@ contract SlipageRequester {
      * @param tokenB_ the address of the second token
      * @param amount_ the sum x token decimals
      * @param sender_ a valid EOA's address
-     * @return the value of token B swapped for token A
+     * @return swapValue - the value of token B swapped for token A
      */
     function getSwapValue(
         bytes32 poolId_,
@@ -126,8 +128,8 @@ contract SlipageRequester {
         address tokenB_,
         uint256 amount_,
         address sender_
-    ) external returns (uint256) {
-        return
+    ) external returns (uint256 swapValue) {
+        swapValue =
             _getSwapValue(poolId_, kind_, tokenA_, tokenB_, amount_, sender_);
     }
 
