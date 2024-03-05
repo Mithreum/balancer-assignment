@@ -38,3 +38,9 @@ USDC / WMATIC
  Slippage($):    6.6853126292710385 
  Slippage(%):    0.67%
 ```
+
+## Deployed contracts
+
+[Gnosis](https://gnosisscan.io/address/0x6b30f76cece9f92d27f0e9ad78312e77709e74a5#code)
+[Ethereum](https://etherscan.io/address/0x6b30f76CecE9F92D27f0e9Ad78312E77709E74A5#code)
+[Polygon](https://polygonscan.com/address/0x0a6a1beb7b0b3545578818f45f4e6219615d25ad#code)
