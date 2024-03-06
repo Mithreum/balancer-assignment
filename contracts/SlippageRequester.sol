@@ -1,4 +1,4 @@
-// Original license: SPDX_License_Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0;
 
 import { IVault } from "./interfaces/IVault.sol";

@@ -46,7 +46,7 @@ def get_slippage(url, data, token_a_decimals, token_b_decimals) -> tuple:
         # 2. Parse the response
         result_hex = json.loads(response.text)['result']
 
-        print('result_hex', result_hex)
+        # print('result_hex', result_hex)
 
         # 3. Parse the hexadecimal string into respective components
         step = 64 # 32 bytes * 2 chars representation
@@ -78,7 +78,7 @@ def main(tests):
             # 1. Prepare the data
             request_data = encode_data(test['contract'], test['function'], test['pool_id'], test['kind'], test['token_a'], test['token_b'], test['amount'], test['sender'], test['feed_a'], test['feed_b'])
 
-            print('request_data', request_data)
+            # print('request_data', request_data)
 
             # 2. 
             [slippage_percent, contract_slippage, token_a_price, token_b_price] = get_slippage(test['rpc_url'], request_data, test['a_decimals'], test['b_decimals'])
