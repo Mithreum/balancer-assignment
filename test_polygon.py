@@ -4,7 +4,7 @@ tests = [
     {
         'pair': 'USDC / WMATIC',
         'rpc_url':'https://polygon-pokt.nodies.app', # Polygon
-        'contract': '0xE8f7f1d8963F56fa9808BBb8925A1Feb518AFC8e', # Polygon
+        'contract': '0x6439B16d1654E264eC9A293E09c42fAA7A48Ca98', # Polygon
         'function': '0x3087bfd8', # Function signature
         'pool_id': '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002',
         'kind': '0x00',
@@ -20,7 +20,7 @@ tests = [
     {
         'pair': 'USDC / WETH',
         'rpc_url':'https://polygon-pokt.nodies.app', # Polygon
-        'contract': '0xE8f7f1d8963F56fa9808BBb8925A1Feb518AFC8e', # Polygon
+        'contract': '0x6439B16d1654E264eC9A293E09c42fAA7A48Ca98', # Polygon
         'function': '0x3087bfd8', # Function signature
         'pool_id': '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002',
         'kind': '0x00',

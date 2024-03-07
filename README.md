@@ -47,4 +47,4 @@ USDC / WMATIC
 
 ## Deployed Contracts (New)
 
-[Polygon](https://polygonscan.com/address/0xe8f7f1d8963f56fa9808bbb8925a1feb518afc8e#code)
+[Polygon](https://polygonscan.com/address/0x6439B16d1654E264eC9A293E09c42fAA7A48Ca98#code)

@@ -58,12 +58,18 @@ def get_slippage(url, data, token_a_decimals, token_b_decimals) -> tuple:
         contract_slippage = parse_signed_number(result_hex[start:stop], 32)
         start = stop
         stop += step
+        token_a_value = int(result_hex[start:stop], 16)
+        start = stop
+        stop += step
+        token_b_value = int(result_hex[start:stop], 16)
+        start = stop
+        stop += step
         token_a_price = int(result_hex[start:stop], 16)
         start = stop
         stop += step
         token_b_price = int(result_hex[start:stop], 16)
 
-        return slippage_percent / 10 ** (6), contract_slippage / 10 ** (6), token_a_price / 10 ** (token_a_decimals + 8), token_b_price / 10 ** (token_b_decimals + 8)
+        return slippage_percent / 10 ** (6), contract_slippage / 10 ** (6), token_a_value / 10 ** (token_a_decimals + 8), token_b_value / 10 ** (token_b_decimals + 8), token_a_price / 1e8, token_b_price / 1e8
 
     except:
         print('Check the RPC URL, pool_id, contract or feed addresses')
@@ -81,10 +87,10 @@ def main(tests):
             # print('request_data', request_data)
 
             # 2. 
-            [slippage_percent, contract_slippage, token_a_price, token_b_price] = get_slippage(test['rpc_url'], request_data, test['a_decimals'], test['b_decimals'])
+            [slippage_percent, contract_slippage, token_a_value, token_b_value,  token_a_price, token_b_price] = get_slippage(test['rpc_url'], request_data, test['a_decimals'], test['b_decimals'])
 
-            # 3. Output the result (NB. divide each token by 10 ** decimals)
-            print(f"{test['pair']}\n Slippage %:\t", slippage_percent, '\n', "Slippage (V):\t", contract_slippage, '\n', "Price A($):\t", token_a_price, '\n', "Price B($): \t", token_b_price)
+            # 3. Output the result
+            print(f"{test['pair']}\n Slippage %:\t", slippage_percent, '\n', "Slippage ($):\t", contract_slippage, '\n', "Value A($):\t", token_a_value, '\n', "Value B($): \t", token_b_value, "\n", "Price A:\t", token_a_price, "\n", "Price B:\t", token_b_price)
 
         except Exception as e:
             print('An error occured', e)

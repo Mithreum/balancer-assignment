@@ -59,7 +59,7 @@ contract SlipageRequester {
      * @param sender_ a valid EOA's address
      * @param dataFeedA_ the address of the Chainlink data feed for token A
      * @param dataFeedB_ the address of the Chainlink data feed for token B
-     * Returns: tuple (int256 Slippage, uint256 TokenAPrice, uint256 TokenBPrice)
+     * Returns: tuple (SlippagePercentage, SlippageValue, TokenAValue, TokenBValue, TokenAPrice, TokenBPrice)
      */
     function getSlippage(
         bytes32 poolId_,
@@ -73,8 +73,10 @@ contract SlipageRequester {
     )
         external
         returns (
-            int256 SlipagePercent,
-            int256 SlippageAmount,
+            int256 SlippagePercentage,
+            int256 SlippageValue,
+            int256 TokenAValue,
+            int256 TokenBValue,
             int256 TokenAPrice,
             int256 TokenBPrice
         )
@@ -90,24 +92,29 @@ contract SlipageRequester {
         );
 
         // 2. Get the token prices
-        TokenAPrice = int256(amount_) * _getChainlinkPrice(dataFeedA_);
-        TokenBPrice = int256(returnValue) * _getChainlinkPrice(dataFeedB_);
+        TokenAPrice = _getChainlinkPrice(dataFeedA_);
+        TokenBPrice = _getChainlinkPrice(dataFeedB_);
 
-        // 3. Extract the token decimals from their contracts:
+        // 3. Get token Values
+        TokenAValue = int256(amount_) * TokenAPrice;
+        TokenBValue = int256(returnValue) * TokenBPrice;
+
+        // 4. Extract the token decimals from their contracts:
         uint8 tokenADecimals = IERC20Metadata(tokenA_).decimals();
         uint8 tokenBDecimals = IERC20Metadata(tokenB_).decimals();
 
-        // 3. Calculate the expected and observed values in USD
-        int256 expected = (TokenAPrice * 1000000) /
+        // 5. Calculate the expected and observed values in USD
+        int256 expected = (TokenAValue * 1000000) /
             int256(10**(AggregatorV3Interface(dataFeedA_).decimals() + tokenADecimals));
 
-        int256 actual = (TokenBPrice * 1000000) /
+        int256 actual = (TokenBValue * 1000000) /
             int256(10**(AggregatorV3Interface(dataFeedB_).decimals()+ tokenBDecimals));
 
-        // Slippage with 1e6 decimals
-        SlippageAmount = int256(actual) - int256(expected);
-        // Slippage % multiplied by 100% & 1e6 decimals
-        SlipagePercent = SlippageAmount * 100000000 / expected;
+        // 6. Slippage with 1e6 decimals
+        SlippageValue =  int256(expected) - int256(actual);
+
+        // 7. Slippage % multiplied by 100% & 1e6 decimals
+        SlippagePercentage = SlippageValue * 100000000 / expected;
 
     }
 
