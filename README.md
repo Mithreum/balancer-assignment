@@ -48,3 +48,4 @@ USDC / WMATIC
 ## Deployed Contracts (New)
 
 [Polygon](https://polygonscan.com/address/0x6439B16d1654E264eC9A293E09c42fAA7A48Ca98#code)
+[Gnosis](https://gnosisscan.io/address/0x29Cb761285C6DeD504526c77F25d1946F0D6e3D5#code)
